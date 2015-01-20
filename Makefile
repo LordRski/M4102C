@@ -1,12 +1,25 @@
-CC = gcc
-CFLAGS = -ansi -pedantic -Wall -W -Werror -g
-all: main
+# Fichier Makefile racine
 
-# Règle 1
-main: main.o 
-	$(CC) -o main.o 
-	make clean
+# Cette variable contient la liste des sous répertoires
+# pour lesquels il faudra construire un programme.
+# Pour l’instant, seul le serveur web est dans la liste.
 
-# Efface tous les fichiers temporaires
-clean:
-	rm -f *.bak rm -f *.o
+FOLDERS = webserver
+
+# Indique à make les règles qui ne correspondent pas à la création d’un fichier
+# make lancera toujours la construction de cette règle si elle est
+# demandée, même si un fichier/répertoire du nom de la cible existe
+
+# On indique ici la règle all ainsi que les répertoires
+
+.PHONY: all $(FOLDERS)
+
+# La règle qui sera exécutée si on lance make sans argument
+
+all: $(FOLDERS)
+
+# Cette règle va lancer make dans le répertoire webserver
+# option -C de make
+
+webserver:
+	make -C webserver
