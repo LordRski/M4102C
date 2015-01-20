@@ -1,0 +1,12 @@
+Q1) Le serveur ne peut communiquer qu'avec un seul client. Le deuxième client attend dans le vide.
+	Pourquoi ? On crée l'attente de connexion dans la création du serveur. Il n'attend donc plus une fois 1 premier client connecté.
+
+Q2) L'option -z permet au client d'écouter sans recevoir de données de la part du serveur.
+	C'est pourquoi il n'y a pas de message de bienvenue !
+
+Q3) La connexion est interdite via telnet avec ::1 qui désigne une adresse en IPV6.
+	Notre serveur n'est pas (encore) prévu pour les adresses en IPV6.
+	Actuellement il faudrait utiliser l'adresse 127.0.0.1
+
+Q4) Lorsqu'un client s'est connecté, que l'on relance le serveur on reçoit l'erreur suivante:
+	bind socket_serveur: Address already in use

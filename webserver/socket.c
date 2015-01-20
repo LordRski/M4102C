@@ -1,4 +1,8 @@
 #include <sys/socket.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
 #include "socket.h"
 
 /* Utilisation de socket, bind, listen */
@@ -6,6 +10,7 @@ int creer_serveur(int port) {
 	int socket_serveur;
 	int socket_client;
 	struct sockaddr_in saddr;
+	const char* welcome_message = "======================================\nBienvenue sur le serveur de La 7 Production\nAuteurs: Edouard CATTEZ - Melvin CLAVEL\nVous pouvez me parler\nSoyez créatif\nJe vous répondrez votre message tant que vous ne vous déconnectez pas.\n======================================\n";
 	
 	/* Création de la socket serveur */
 	socket_serveur = socket(AF_INET, SOCK_STREAM, 0);
@@ -39,6 +44,14 @@ int creer_serveur(int port) {
 	if (socket_client == -1)
 	{
 		perror("accept");
+		return -1;
 	}
+	
+	/* Attente d'une seconde avant l'envoi du message de bienvenue */
+	sleep(1);
+	
+	/* Message de bienvenue envoyé */
+	write(socket_client, welcome_message, strlen(welcome_message));
+	
 	return socket_client;
 }

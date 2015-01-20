@@ -1,21 +1,35 @@
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 #include "socket.h"
 
 int main(int argc, char **argv)
 {
-	const char* welcome_message = "Bienvenue sur le serveur de La 7 Production\nAuteurs: Edouard CATTEZ - Melvin CLAVEL\nVous pouvez me parler\nSoyez créatif\nJe vous répondrez votre message tant que vous ne vous déconnectez pas.\n\n\n";
+	int port;
 	int socket_client;
-	socket_client = creer_serveur(8000);
+	char buf[256];
 	
-	if (socket_client != -1)
+	if (argc < 2) {
+		printf("Usage: /l7pserv [port]\n");
+		return -1;
+	}
+	
+	port = atoi(argv[1]);
+	
+	if (port == 0) {
+		printf("port must be an int > 0 !\n");
+		return -1;
+	}
+	
+	socket_client = creer_serveur(port);
+	
+	while(socket_client != -1)
 	{
-		write(socket_client, welcome_message, strlen(welcome_message));
-		while(1)
-		{
-			
-		
+		if (read(socket_client, &buf, sizeof(buf)) != -1)
+		{ 
+			write(socket_client, &buf, strlen(buf));
 		}
 	}
 	
