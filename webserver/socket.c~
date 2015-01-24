@@ -52,9 +52,6 @@ int creer_serveur(int port) {
 	
 	/* Message de bienvenue envoyé */
 	write(socket_client, welcome_message, strlen(welcome_message));
-
-	/* Notification de connexion pour le serveur */
-	printf("Connexion d'un client... ID: %d\n", socket_client);
 	
 	return socket_client;
 }

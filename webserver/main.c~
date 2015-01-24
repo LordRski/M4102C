@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 	port = atoi(argv[1]);
 	
 	if (port == 0) {
-		printf("Port must be an int > 0 !\n");
+		printf("port must be an int > 0 !\n");
 		return -1;
 	}
 	
