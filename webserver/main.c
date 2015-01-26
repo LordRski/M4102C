@@ -5,6 +5,7 @@ int main(int argc, char **argv)
 	int port;
 	int socket_serveur;
 	int socket_client;
+	int read_message;
 	char buf[256];
 	
 	if (argc < 2) {
@@ -19,6 +20,10 @@ int main(int argc, char **argv)
 		return -1;
 	}
 	
+	/* Initialise les signaux des processus */
+	initialiser_signaux();
+	
+	/* Crée un serveur */
 	socket_serveur = creer_serveur(port);
 	
 	if (socket_serveur == -1)
@@ -26,28 +31,26 @@ int main(int argc, char **argv)
 		return -1;
 	}
 	
-	socket_client = ecouter_connexion(socket_serveur);
-
-	while(1)
+	while (1)
 	{
-		/* On lit le buffer */
-		if (read(socket_client, &buf, sizeof(buf)-1) <= 0)
+		socket_client = ecouter_connexion(socket_serveur);
+		while(1)
 		{
-			socket_client = ecouter_connexion(socket_serveur);
+			/* On lit le buffer */
+			read_message = read(socket_client, buf, sizeof(buf));
+			if (read_message <= 0)
+			{
+				break;
+			}
+		
+			/* On écrit le message de l'utilisateur à l'utilisateur (echo) */
+			if (write(socket_client, buf, read_message) != -1)
+			{
+				/* On notifie au serveur le message du client */
+				buf[read_message] = '\0';
+				printf("Client(id=%d) send: %s", socket_client, buf);
+			}
 		}
-		
-		/* On écrit le message de l'utilisateur à l'utilisateur (echo) */
-		if (write(socket_client, &buf, strlen(buf)) == -1)
-		{
-			perror("write");
-			return -1;
-		}
-		
-		/* On notifie au serveur le message du client */
-		printf("Client(id=%d) send: %s", socket_client, buf);
-		
-		/* On efface le buffer pour ne pas avoir de caractères résiduels */
-		memset(&buf,0,255);
 	}
 	return 0;
 }
