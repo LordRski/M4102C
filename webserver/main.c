@@ -1,13 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <string.h>
 #include "socket.h"
 
 int main(int argc, char **argv)
 {
 	int port;
+	int socket_serveur;
 	int socket_client;
 	char buf[256];
 	
@@ -23,29 +19,35 @@ int main(int argc, char **argv)
 		return -1;
 	}
 	
-	socket_client = creer_serveur(port);
+	socket_serveur = creer_serveur(port);
+	
+	if (socket_serveur == -1)
+	{
+		return -1;
+	}
+	
+	socket_client = ecouter_connexion(socket_serveur);
 
-	while(socket_client != -1)
+	while(1)
 	{
 		/* On lit le buffer */
-		if (read(socket_client, &buf, sizeof(buf)-1) != -1)
+		if (read(socket_client, &buf, sizeof(buf)-1) <= 0)
 		{
-			/* On écrit le message de l'utilisateur à l'utilisateur (echo) */
-			write(socket_client, &buf, strlen(buf));
-			
-			/* On écrit le message au serveur pour savoir quel client à écrit quoi */
-			printf("Client(id=%d) send: %s", socket_client, buf);
-			
-			/* Le client quitte le serveur s'il écrit le message voulu */
-			if (strncmp(buf, "quit", 4) == 0)
-			{
-				close(socket_client);
-				return 0;
-			}
-			
-			/* On efface le buffer pour ne pas avoir de caractères résiduels */
-			memset(&buf,0,255);
+			socket_client = ecouter_connexion(socket_serveur);
 		}
+		
+		/* On écrit le message de l'utilisateur à l'utilisateur (echo) */
+		if (write(socket_client, &buf, strlen(buf)) == -1)
+		{
+			perror("write");
+			return -1;
+		}
+		
+		/* On notifie au serveur le message du client */
+		printf("Client(id=%d) send: %s", socket_client, buf);
+		
+		/* On efface le buffer pour ne pas avoir de caractères résiduels */
+		memset(&buf,0,255);
 	}
 	return 0;
 }
