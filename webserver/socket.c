@@ -1,12 +1,70 @@
 #include "socket.h"
 
+/* Traitement du signal passé en paramètre */
+void traitement_signal(int sig)
+{
+	printf("Signal %d reçu\n", sig);
+}
+
 /* Initialise les signaux des processus */
 void initialiser_signaux(void)
 {
+	struct sigaction sa;
+	
+	sa.sa_handler = traitement_signal;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	
+	if (sigaction(SIGCHLD, &sa, NULL) == -1)
+	{
+		perror("sigaction(SIGCHLD)");
+	}
+	
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
 	{
 		perror("signal");
 	}
+}
+
+/* Attend la connexion d'un utilisateur et retourne la socket client */
+int ecouter_connexion(int socket_serveur)
+{
+	int pid;
+	int socket_client;
+	const char* welcome_message = "======================================\nBienvenue sur le serveur de La 7 Production\nAuteurs: Edouard CATTEZ - Melvin CLAVEL\nVous pouvez me parler\nSoyez créatif\nJe vous répondrez votre message tant que vous ne vous déconnectez pas.\n======================================\n";
+	
+	/* Accepte une connexion */
+	socket_client = accept(socket_serveur, NULL, NULL);
+	if (socket_client == -1)
+	{
+		perror("accept");
+		return -1;
+	}
+	
+	/* Création d'un client (processus fils)*/
+	pid = fork();
+	if (pid == -1)
+	{
+		perror("fork");
+		return -1;
+	}
+	else if (pid > 0)
+	{
+		close(socket_client);
+	}
+	else
+	{	
+		/* Attente d'une seconde avant l'envoi du message de bienvenue */
+		/* sleep(1); */
+	
+		/* Message de bienvenue envoyé */
+		write(socket_client, welcome_message, strlen(welcome_message));
+
+		/* Notification de connexion pour le serveur */
+		printf("Connexion d'un client... ID: %d\n", getpid());
+	}
+	
+	return socket_client;
 }
 
 
@@ -51,45 +109,4 @@ int creer_serveur(int port) {
 	}
 	
 	return socket_serveur;
-}
-
-/* Attend la connexion d'un utilisateur et retourne la socket client */
-int ecouter_connexion(int socket_serveur)
-{
-	int pid;
-	int socket_client;
-	const char* welcome_message = "======================================\nBienvenue sur le serveur de La 7 Production\nAuteurs: Edouard CATTEZ - Melvin CLAVEL\nVous pouvez me parler\nSoyez créatif\nJe vous répondrez votre message tant que vous ne vous déconnectez pas.\n======================================\n";
-	
-	/* Accepte une connexion */
-	socket_client = accept(socket_serveur, NULL, NULL);
-	if (socket_client == -1)
-	{
-		perror("accept");
-		return -1;
-	}
-	
-	/* Création d'un client (processus fils)*/
-	pid = fork();
-	if (pid == -1)
-	{
-		perror("fork");
-		return -1;
-	}
-	else if (pid > 0)
-	{
-		close(socket_client);
-	}
-	else
-	{	
-		/* Attente d'une seconde avant l'envoi du message de bienvenue */
-		/* sleep(1); */
-	
-		/* Message de bienvenue envoyé */
-		write(socket_client, welcome_message, strlen(welcome_message));
-
-		/* Notification de connexion pour le serveur */
-		printf("Connexion d'un client... ID: %d\n", getpid());
-	}
-	
-	return socket_client;
 }

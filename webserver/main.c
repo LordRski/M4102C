@@ -33,6 +33,7 @@ int main(int argc, char **argv)
 	
 	while (1)
 	{
+		traitement_signal(client);
 		socket_client = ecouter_connexion(socket_serveur);
 		while(1)
 		{
@@ -48,7 +49,7 @@ int main(int argc, char **argv)
 			{
 				/* On notifie au serveur le message du client */
 				buf[read_message] = '\0';
-				printf("Client(id=%d) send: %s", socket_client, buf);
+				printf("Client(id=%d) send: %s", getpid(), buf);
 			}
 		}
 	}
