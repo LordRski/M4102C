@@ -56,8 +56,10 @@ int creer_serveur(int port) {
 /* Attend la connexion d'un utilisateur et retourne la socket client */
 int ecouter_connexion(int socket_serveur)
 {
+	int pid;
 	int socket_client;
 	const char* welcome_message = "======================================\nBienvenue sur le serveur de La 7 Production\nAuteurs: Edouard CATTEZ - Melvin CLAVEL\nVous pouvez me parler\nSoyez créatif\nJe vous répondrez votre message tant que vous ne vous déconnectez pas.\n======================================\n";
+	
 	/* Accepte une connexion */
 	socket_client = accept(socket_serveur, NULL, NULL);
 	if (socket_client == -1)
@@ -66,14 +68,28 @@ int ecouter_connexion(int socket_serveur)
 		return -1;
 	}
 	
-	/* Attente d'une seconde avant l'envoi du message de bienvenue */
-	/* sleep(1); */
+	/* Création d'un client (processus fils)*/
+	pid = fork();
+	if (pid == -1)
+	{
+		perror("fork");
+		return -1;
+	}
+	else if (pid > 0)
+	{
+		close(socket_client);
+	}
+	else
+	{	
+		/* Attente d'une seconde avant l'envoi du message de bienvenue */
+		/* sleep(1); */
 	
-	/* Message de bienvenue envoyé */
-	write(socket_client, welcome_message, strlen(welcome_message));
+		/* Message de bienvenue envoyé */
+		write(socket_client, welcome_message, strlen(welcome_message));
 
-	/* Notification de connexion pour le serveur */
-	printf("Connexion d'un client... ID: %d\n", socket_client);
+		/* Notification de connexion pour le serveur */
+		printf("Connexion d'un client... ID: %d\n", getpid());
+	}
 	
 	return socket_client;
 }
