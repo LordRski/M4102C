@@ -5,8 +5,8 @@ int main(int argc, char **argv)
 	int port;
 	int socket_serveur;
 	int socket_client;
-	int read_message;
 	char buf[256];
+	FILE * stream;
 	
 	if (argc < 2) {
 		printf("Usage: /l7pserv [port]\n");
@@ -36,25 +36,22 @@ int main(int argc, char **argv)
 		traitement_signal(socket_client);
 		socket_client = ecouter_connexion(socket_serveur);
 		if (socket_client != 0)
-		{	
+		{
+			stream = fdopen(socket_client, "w+");
 			while(1)
 			{
 				/* On lit le buffer */
-				read_message = read(socket_client, buf, sizeof(buf));
-				if (read_message <= 0)
+				if (fgets(buf, sizeof(buf), stream) == NULL)
 				{
-					if (read_message == -1)
-					{
-						perror("read");
-					}
+					printf("Client(id=%d) disconnect\n", getpid());
+					fclose(stream);
 					exit(0);
 				}
 		
 				/* On écrit le message de l'utilisateur à l'utilisateur (echo) */
-				if (write(socket_client, buf, read_message) != -1)
+				if (fprintf(stream, "<L7Pserv> %s", buf) != -1)
 				{
 					/* On notifie au serveur le message du client */
-					buf[read_message] = '\0';
 					printf("Client(id=%d) send: %s", getpid(), buf);
 				}
 			}
