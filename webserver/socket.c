@@ -3,7 +3,11 @@
 /* Traitement du signal passé en paramètre */
 void traitement_signal(int sig)
 {
-	printf("Signal %d reçu\n", sig);
+	int status;
+	if (sig == SIGCHLD) {
+		while (waitpid(-1, &status, WNOHANG) > 0)
+			;
+	}
 }
 
 /* Initialise les signaux des processus */
@@ -51,6 +55,7 @@ int ecouter_connexion(int socket_serveur)
 	else if (pid > 0)
 	{
 		close(socket_client);
+		return 0;
 	}
 	else
 	{	

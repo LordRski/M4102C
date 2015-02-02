@@ -33,23 +33,30 @@ int main(int argc, char **argv)
 	
 	while (1)
 	{
-		traitement_signal(client);
+		traitement_signal(socket_client);
 		socket_client = ecouter_connexion(socket_serveur);
-		while(1)
-		{
-			/* On lit le buffer */
-			read_message = read(socket_client, buf, sizeof(buf));
-			if (read_message <= 0)
+		if (socket_client != 0)
+		{	
+			while(1)
 			{
-				break;
-			}
+				/* On lit le buffer */
+				read_message = read(socket_client, buf, sizeof(buf));
+				if (read_message <= 0)
+				{
+					if (read_message == -1)
+					{
+						perror("read");
+					}
+					exit(0);
+				}
 		
-			/* On écrit le message de l'utilisateur à l'utilisateur (echo) */
-			if (write(socket_client, buf, read_message) != -1)
-			{
-				/* On notifie au serveur le message du client */
-				buf[read_message] = '\0';
-				printf("Client(id=%d) send: %s", getpid(), buf);
+				/* On écrit le message de l'utilisateur à l'utilisateur (echo) */
+				if (write(socket_client, buf, read_message) != -1)
+				{
+					/* On notifie au serveur le message du client */
+					buf[read_message] = '\0';
+					printf("Client(id=%d) send: %s", getpid(), buf);
+				}
 			}
 		}
 	}
