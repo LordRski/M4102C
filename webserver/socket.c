@@ -35,7 +35,6 @@ int ecouter_connexion(int socket_serveur)
 {
 	int pid;
 	int socket_client;
-	const char* welcome_message = "======================================\nBienvenue sur le serveur de La 7 Production\nAuteurs: Edouard CATTEZ - Melvin CLAVEL\nVous pouvez me parler\nSoyez créatif\nJe vous répondrez votre message tant que vous ne vous déconnectez pas.\n======================================\n";
 	
 	/* Accepte une connexion */
 	socket_client = accept(socket_serveur, NULL, NULL);
@@ -63,7 +62,7 @@ int ecouter_connexion(int socket_serveur)
 		/* sleep(1); */
 	
 		/* Message de bienvenue envoyé */
-		write(socket_client, welcome_message, strlen(welcome_message));
+		/*write(socket_client, welcome_message, strlen(welcome_message));*/
 
 		/* Notification de connexion pour le serveur */
 		printf("Connexion d'un client... ID: %d\n", getpid());

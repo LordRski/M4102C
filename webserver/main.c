@@ -43,17 +43,12 @@ int main(int argc, char **argv)
 				/* On lit le buffer */
 				if (fgets(buf, sizeof(buf), stream) == NULL)
 				{
-					printf("Client(id=%d) disconnect\n", getpid());
+					printf("Client(id=%d) disconnected\n", getpid());
 					fclose(stream);
 					exit(0);
 				}
-		
-				/* On écrit le message de l'utilisateur à l'utilisateur (echo) */
-				if (fprintf(stream, "<L7Pserv> %s", buf) != -1)
-				{
-					/* On notifie au serveur le message du client */
-					printf("Client(id=%d) send: %s", getpid(), buf);
-				}
+				/* On écrit la requête du client sur la sortie standard du server */
+				printf("Client(id=%d) requests: %s", getpid(), buf);
 			}
 		}
 	}
