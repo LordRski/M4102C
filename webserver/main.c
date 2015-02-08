@@ -1,4 +1,5 @@
 #include "socket.h"
+#include "http.h"
 
 int main(int argc, char **argv)
 {
@@ -38,17 +39,28 @@ int main(int argc, char **argv)
 		if (socket_client != 0)
 		{
 			stream = fdopen(socket_client, "w+");
-			while(1)
+			if (fgets(buf, sizeof(buf), stream) != NULL && verifier_entete(buf) == 0)
 			{
-				/* On lit le buffer */
-				if (fgets(buf, sizeof(buf), stream) == NULL)
+				request_ok(stream);
+				printf("%d: {%s}\n", getpid(), buf);
+				while(1)
 				{
-					printf("Client(id=%d) disconnected\n", getpid());
-					fclose(stream);
-					exit(0);
+					/* On lit le buffer */
+					if (fgets(buf, sizeof(buf), stream) == NULL)
+					{
+						printf("Client(id=%d) disconnected\n", getpid());
+						fclose(stream);
+						exit(0);
+					}
+					/* On écrit la requête du client sur la sortie standard du server */
+					printf("%d: {%s}\n", getpid(), buf);
 				}
-				/* On écrit la requête du client sur la sortie standard du server */
-				printf("Client(id=%d) requests: %s", getpid(), buf);
+			}
+			else
+			{
+				bad_request_400(stream);
+				fclose(stream);
+				exit(0);
 			}
 		}
 	}

@@ -73,7 +73,8 @@ int ecouter_connexion(int socket_serveur)
 
 
 /* Crée un serveur et retourne sa socket */
-int creer_serveur(int port) {
+int creer_serveur(int port)
+{
 	int optval = 1;
 	int socket_serveur;
 	struct sockaddr_in saddr;
