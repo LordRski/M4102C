@@ -16,6 +16,6 @@
 Vérifie l'en-tête de la requête envoyé par le client.
 Retourne 0 si l'en-tête respecte les normes HTTP, -1 sinon.
 */
-int verifier_entete(FILE *stream, char *request);
+int verifier_entete(char *request);
 
 #endif
