@@ -13,7 +13,7 @@ int verifier_entete(char * request)
 	res = NULL;
 	split = strtok(tmp, " ");
 	words = 0;
-	result = 0;
+	result = REQUEST_OK;
 	
 	/* On découpe la requête et on stocke les parties dans res */
 	while (split)
@@ -34,17 +34,30 @@ int verifier_entete(char * request)
 	/* Vérifier que le 3ème mot est de la forme HTTP/M.m (M = 1, m = 0 ou 1) */
 	if (words != NB_WORDS || strcmp("GET", res[0]) != 0 || (strncmp("HTTP/1.0", res[2], 8) != 0 && strncmp("HTTP/1.1", res[2], 8) != 0))
 	{
-		result = -1;
+		result = ERROR_400;
+	}
+	
+	if (strcmp("/", res[1]) != 0)
+	{
+		result = ERROR_404;
 	}
 	
 	free(res);
 	return result;
 }
 
-void bad_request_400(FILE * stream)
+void bad_request(const int ERROR, FILE * stream)
 {
-	const char *error = "400 Bad request\r\n";
-	fprintf(stream, "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: %d\r\n\r\n%s", (int)strlen(error), error);
+	char *error;
+	if (ERROR == ERROR_400)
+	{
+		error = "400 Bad request\r\n";
+	}
+	else if (ERROR == ERROR_404)
+	{
+		error = "404 Not Found\r\n";
+	}
+	fprintf(stream, "HTTP/1.1 %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n%s", error, (int)strlen(error), error);
 	fflush(stream);
 }
 

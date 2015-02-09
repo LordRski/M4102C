@@ -51,9 +51,9 @@ int main(int argc, char **argv)
 				print_request(buf);
 			}
 			
-			if (entete == -1)
+			if (entete != REQUEST_OK)
 			{
-				bad_request_400(stream);
+				bad_request(entete, stream);
 				fclose(stream);
 				exit(0);
 			}
