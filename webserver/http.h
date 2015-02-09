@@ -1,6 +1,7 @@
 #ifndef __HTTP_H__
 #define __HTTP_H__
 
+#include <alloca.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

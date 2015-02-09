@@ -1,3 +1,4 @@
 http.o: http.c http.h
 main.o: main.c socket.h http.h
 socket.o: socket.c socket.h
+url.o: url.c url.h
