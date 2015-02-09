@@ -1,19 +1,21 @@
 #include "http.h"
 
-int verifier_entete(char * request)
-{	
+int parse_http_request(const char * request_line, http_request * request)
+{
 	const int NB_WORDS = 3;
 	char *tmp;
 	char **res;
 	char *split;
-	int result;
 	int words;
 	
-	tmp = request;
+	tmp = alloca(strlen(request_line)+1);
+	strcpy(tmp, request_line);
 	res = NULL;
 	split = strtok(tmp, " ");
 	words = 0;
-	result = REQUEST_OK;
+	
+	request->method = HTTP_GET;	
+	request->url = NULL;
 	
 	/* On découpe la requête et on stocke les parties dans res */
 	while (split)
@@ -34,41 +36,52 @@ int verifier_entete(char * request)
 	/* Vérifier que le 3ème mot est de la forme HTTP/M.m (M = 1, m = 0 ou 1) */
 	if (words != NB_WORDS || strcmp("GET", res[0]) != 0 || (strncmp("HTTP/1.0", res[2], 8) != 0 && strncmp("HTTP/1.1", res[2], 8) != 0))
 	{
-		result = ERROR_400;
+		request->method = HTTP_UNSUPPORTED;
+		free(res);
+		return 0;
 	}
 	
-	if (strcmp("/", res[1]) != 0)
+	/* Version majeure de HTTP = 1 */
+	request->major_version = 1;
+	
+	/* Version mineure de HTTP = 0 */
+	if (strncmp("HTTP/1.0", res[2], 8) == 0)
 	{
-		result = ERROR_404;
+		request->minor_version = 0;
 	}
+	/* Version mineure de HTTP = 1 */
+	else if (strncmp("HTTP/1.1", res[2], 8) == 0)
+	{
+		request->minor_version = 1;
+	}
+	
+	/* Url de la requête */
+	request->url = res[1];
 	
 	free(res);
-	return result;
+	return 1;
 }
 
-void bad_request(const int ERROR, FILE * stream)
+void skip_headers(FILE * client)
 {
-	char *error;
-	if (ERROR == ERROR_400)
-	{
-		error = "400 Bad request\r\n";
+	char buf[256];
+	/* Attente de la ligne vide indiquant que la requête est terminée */
+	while(strncmp("\r\n", fgets_or_exit(buf, sizeof(buf), client), 2) != 0)
+		;
+}
+
+void send_status(FILE * client, int code, const char * reason_phrase)
+{
+	fprintf(client, "HTTP/1.1 %d %s\r\n", code, reason_phrase);
+	if (code != 200) {
+		fprintf(client, "Connection: close\r\n");
 	}
-	else if (ERROR == ERROR_404)
-	{
-		error = "404 Not Found\r\n";
-	}
-	fprintf(stream, "HTTP/1.1 %s\r\nConnection: close\r\nContent-Length: %d\r\n\r\n%s", error, (int)strlen(error), error);
-	fflush(stream);
+	fflush(client);
 }
 
-void request_ok(FILE * stream)
+void send_response(FILE * client, int code, const char * reason_phrase, const char * message_body)
 {
-	const char *welcome = "Bienvenue sur le serveur de la 7 Production\r\npar Melvin CLAVEL et Edouard CATTEZ\r\n\r\n";
-	fprintf(stream, "HTTP/1.1 200 OK\r\nContent-Length: %d\r\n\r\n%s", (int)strlen(welcome), welcome);
-	fflush(stream);
-}
-
-void print_request(char * request)
-{
-	printf("%d: %s", getpid(), request);
+	send_status(client, code, reason_phrase);
+	fprintf(client, "Content-Length: %d\r\n\r\n%s", (int)strlen(message_body), message_body);
+	fflush(client);
 }

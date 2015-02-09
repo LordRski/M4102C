@@ -1,14 +1,26 @@
 #include "socket.h"
 #include "http.h"
 
+char * fgets_or_exit(char * buf, int size, FILE * client)
+{
+	if (fgets(buf, size, client) == NULL)
+	{
+		fclose(client);
+		exit(0);
+	}
+	return buf;
+}
+
 int main(int argc, char **argv)
 {
+	const char *motd = "Bienvenue sur le serveur de La 7 Production\r\npar Edouard CATTEZ et Melvin CLAVEL\r\n";
 	int port;
 	int socket_serveur;
 	int socket_client;
-	int entete;
+	int bad_request;
 	char buf[256];
-	FILE * stream;
+	FILE * client;
+	http_request request;
 	
 	if (argc < 2) {
 		printf("Usage: /l7pserv [port]\n");
@@ -39,41 +51,26 @@ int main(int argc, char **argv)
 		socket_client = ecouter_connexion(socket_serveur);
 		if (socket_client != 0)
 		{
-			stream = fdopen(socket_client, "w+");
-			print_request(fgets(buf, sizeof(buf), stream));
+			client = fdopen(socket_client, "w+");
 			
 			/* Vérification de la ligne GET / HTTP/1.1 */
-			entete = verifier_entete(buf);
+			bad_request = !parse_http_request(fgets_or_exit(buf, sizeof(buf), client), &request);
 			
 			/* Attente de la ligne vide indiquant que la requête est terminée */
-			while(strncmp("\r\n", fgets(buf, sizeof(buf), stream), 2) != 0)
-			{
-				print_request(buf);
-			}
+			skip_headers(client);
 			
-			if (entete != REQUEST_OK)
-			{
-				bad_request(entete, stream);
-				fclose(stream);
-				exit(0);
-			}
+			if (bad_request)
+				send_response(client, 400, "Bad Request", "Bad request\r\n");
+			else if (request.method == HTTP_UNSUPPORTED)
+				send_response(client, 405, "Method Not Allowed", "Method Not Allowed\r\n");
+			else if (strcmp(request.url, "/") == 0)
+				send_response(client, 200, "OK", motd);
 			else
-			{
-				print_request("accepted\n");
-				request_ok(stream);
-			}
+				send_response (client, 404, "Not Found", "Not Found\r\n");
 			
 			while(1)
 			{
-				/* On lit le buffer */
-				if (fgets(buf, sizeof(buf), stream) == NULL)
-				{
-					print_request("disconnected\n");
-					fclose(stream);
-					exit(0);
-				}
-				/* On écrit la requête du client sur la sortie standard du server */
-				print_request(buf);
+				fgets_or_exit(buf, sizeof(buf), client);
 			}
 		}
 	}
