@@ -6,6 +6,7 @@ int main(int argc, char **argv)
 	int port;
 	int socket_serveur;
 	int socket_client;
+	int entete;
 	char buf[256];
 	FILE * stream;
 	
@@ -39,28 +40,40 @@ int main(int argc, char **argv)
 		if (socket_client != 0)
 		{
 			stream = fdopen(socket_client, "w+");
-			if (fgets(buf, sizeof(buf), stream) != NULL && verifier_entete(buf) == 0)
+			print_request(fgets(buf, sizeof(buf), stream));
+			
+			/* Vérification de la ligne GET / HTTP/1.1 */
+			entete = verifier_entete(buf);
+			
+			/* Attente de la ligne vide indiquant que la requête est terminée */
+			while(strncmp("\r\n", fgets(buf, sizeof(buf), stream), 2) != 0)
 			{
-				request_ok(stream);
-				printf("%d: {%s}\n", getpid(), buf);
-				while(1)
-				{
-					/* On lit le buffer */
-					if (fgets(buf, sizeof(buf), stream) == NULL)
-					{
-						printf("Client(id=%d) disconnected\n", getpid());
-						fclose(stream);
-						exit(0);
-					}
-					/* On écrit la requête du client sur la sortie standard du server */
-					printf("%d: {%s}\n", getpid(), buf);
-				}
+				print_request(buf);
 			}
-			else
+			
+			if (entete == -1)
 			{
 				bad_request_400(stream);
 				fclose(stream);
 				exit(0);
+			}
+			else
+			{
+				print_request("accepted\n");
+				request_ok(stream);
+			}
+			
+			while(1)
+			{
+				/* On lit le buffer */
+				if (fgets(buf, sizeof(buf), stream) == NULL)
+				{
+					print_request("disconnected\n");
+					fclose(stream);
+					exit(0);
+				}
+				/* On écrit la requête du client sur la sortie standard du server */
+				print_request(buf);
 			}
 		}
 	}

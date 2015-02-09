@@ -58,12 +58,6 @@ int ecouter_connexion(int socket_serveur)
 	}
 	else
 	{	
-		/* Attente d'une seconde avant l'envoi du message de bienvenue */
-		/* sleep(1); */
-	
-		/* Message de bienvenue envoyé */
-		/*write(socket_client, welcome_message, strlen(welcome_message));*/
-
 		/* Notification de connexion pour le serveur */
 		printf("Connexion d'un client... ID: %d\n", getpid());
 	}

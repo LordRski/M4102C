@@ -16,7 +16,7 @@
 Vérifie l'en-tête de la requête envoyé par le client.
 Retourne 0 si l'en-tête respecte les normes HTTP, -1 sinon.
 */
-int verifier_entete(char *request);
+int verifier_entete(char * request);
 
 /**
 Affiche le message d'erreur 400
@@ -27,4 +27,6 @@ void bad_request_400(FILE * stream);
 Affiche le message de requête correcte
 */
 void request_ok(FILE * stream);
+
+void print_request(char * request);
 #endif

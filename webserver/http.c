@@ -1,6 +1,6 @@
 #include "http.h"
 
-int verifier_entete(char *request)
+int verifier_entete(char * request)
 {	
 	const int NB_SPACES = 3;
 	char *tmp;
@@ -58,10 +58,18 @@ int verifier_entete(char *request)
 
 void bad_request_400(FILE * stream)
 {
-	fprintf(stream, "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n400 Bad request\r\n");
+	fprintf(stream, "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n");
+	fflush(stream);
 }
 
 void request_ok(FILE * stream)
 {
-	fprintf(stream, "HTTP/1.1 200 OK\r\nContent-Length: 17\r\n");
+	const char *welcome = "Bienvenue sur le serveur de la 7 Production\r\npar Melvin CLAVEL et Edouard CATTEZ\r\n\r\n";
+	fprintf(stream, "HTTP/1.1 200 OK\r\nContent-Length: %d\r\n\r\n%s", (int)strlen(welcome), welcome);
+	fflush(stream);
+}
+
+void print_request(char * request)
+{
+	printf("%d: %s", getpid(), request);
 }
