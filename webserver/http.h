@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "url.h"
+
 enum http_method {
 	HTTP_GET,
 	HTTP_UNSUPPORTED,
@@ -46,4 +48,9 @@ void send_status(FILE * client, int code, const char * reason_phrase);
 Envoie une réponse complète au client sur sa requête.
 */
 void send_response(FILE * client, int code, const char * reason_phrase, const char * message_body);
+
+/**
+Envoie un fichier existant au client via son descripteur
+*/
+void send_file(FILE * client, int fd);
 #endif

@@ -1,5 +1,6 @@
 #include "socket.h"
 #include "http.h"
+#include "url.h"
 
 char * fgets_or_exit(char * buf, int size, FILE * client)
 {
@@ -13,11 +14,13 @@ char * fgets_or_exit(char * buf, int size, FILE * client)
 
 int main(int argc, char **argv)
 {
-	const char *motd = "Bienvenue sur le serveur de La 7 Production\r\npar Edouard CATTEZ et Melvin CLAVEL\r\n";
+	/*const char *motd = "Bienvenue sur le serveur de La 7 Production\r\npar Edouard CATTEZ et Melvin CLAVEL\r\n";*/
+	const char *document_root = "/home/infoetu/catteze/public_html";
 	int port;
 	int socket_serveur;
 	int socket_client;
 	int bad_request;
+	int fd_file;
 	char buf[256];
 	FILE * client;
 	http_request request;
@@ -63,10 +66,15 @@ int main(int argc, char **argv)
 				send_response(client, 400, "Bad Request", "Bad request\r\n");
 			else if (request.method == HTTP_UNSUPPORTED)
 				send_response(client, 405, "Method Not Allowed", "Method Not Allowed\r\n");
-			else if (strcmp(request.url, "/") == 0)
-				send_response(client, 200, "OK", motd);
-			else
-				send_response (client, 404, "Not Found", "Not Found\r\n");
+			else {
+				fd_file = check_and_open(rewrite_url(request.url),document_root);
+				if (fd_file == -1)
+					send_response (client, 404, "Not Found", "Not Found\r\n");
+				else {
+					send_status(client, 200, "OK");
+					send_file(client, fd_file);
+				}
+			}
 			
 			while(1)
 			{

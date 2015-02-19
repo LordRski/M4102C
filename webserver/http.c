@@ -56,7 +56,8 @@ int parse_http_request(const char * request_line, http_request * request)
 	}
 	
 	/* Url de la requête */
-	request->url = res[1];
+	request->url = malloc(strlen(res[1])+1);
+	strcpy(request->url, res[1]);
 	
 	free(res);
 	return 1;
@@ -83,5 +84,16 @@ void send_response(FILE * client, int code, const char * reason_phrase, const ch
 {
 	send_status(client, code, reason_phrase);
 	fprintf(client, "Content-Length: %d\r\n\r\n%s", (int)strlen(message_body), message_body);
+	fflush(client);
+}
+
+void send_file(FILE * client, int fd) {
+	int size;
+	
+	size = get_file_size(fd);
+	
+	fprintf(client, "Content-Length: %d\r\n\r\n", size);
+	fflush(client);
+	copy(fd, fileno(client));
 	fflush(client);
 }
