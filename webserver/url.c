@@ -59,7 +59,7 @@ int get_file_size(int fd)
 int copy(int in, int out)
 {
 	int towrite;
-	char buf[256];
+	char buf[8000];
 
 	towrite = read(in,buf,sizeof(buf));
 	while (towrite > 0)

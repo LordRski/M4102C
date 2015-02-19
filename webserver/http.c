@@ -88,11 +88,7 @@ void send_response(FILE * client, int code, const char * reason_phrase, const ch
 }
 
 void send_file(FILE * client, int fd) {
-	int size;
-	
-	size = get_file_size(fd);
-	
-	fprintf(client, "Content-Length: %d\r\n\r\n", size);
+	fprintf(client, "Content-Length: %d\r\n\r\n", get_file_size(fd));
 	fflush(client);
 	copy(fd, fileno(client));
 	fflush(client);
