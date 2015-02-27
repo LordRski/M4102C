@@ -50,6 +50,11 @@ Envoie une réponse complète au client sur sa requête.
 void send_response(FILE * client, int code, const char * reason_phrase, const char * message_body);
 
 /**
+Envoie le content-type du fichier envoyé au client
+*/
+void send_content(FILE * client, const char * mime);
+
+/**
 Envoie un fichier existant au client via son descripteur
 */
 void send_file(FILE * client, int fd);

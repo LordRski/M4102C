@@ -5,6 +5,14 @@ char * rewrite_url(char * url)
 	char *rewritten;
 	int i;
 	
+	/* Accès interdit si l'url contient le token voulu */
+	if (strstr(url, "/../") != NULL)
+		return NULL;
+	
+	/* Retourne à la page d'index si l'url est la racine */
+	if (strcmp(url, "/") == 0)
+		return "/index.html";
+	
 	i = 0;
 	while (url[i] != '\0' && url[i] != '?')
 	{
@@ -15,7 +23,10 @@ char * rewrite_url(char * url)
 	rewritten = (char *)malloc(i+1);
 	
 	if (rewritten == NULL)
+	{
+		perror("malloc");
 		return NULL;
+	}
 	
 	strncpy(rewritten, url, i);
 	rewritten[i] = '\0';

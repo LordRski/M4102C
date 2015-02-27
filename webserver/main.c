@@ -1,6 +1,7 @@
 #include "socket.h"
 #include "http.h"
 #include "url.h"
+#include "mime.h"
 
 char * fgets_or_exit(char * buf, int size, FILE * client)
 {
@@ -21,6 +22,7 @@ int main(int argc, char **argv)
 	int socket_client;
 	int bad_request;
 	int fd_file;
+	char * url;
 	char buf[256];
 	FILE * client;
 	http_request request;
@@ -56,29 +58,36 @@ int main(int argc, char **argv)
 		{
 			client = fdopen(socket_client, "w+");
 			
-			/* Vérification de la ligne GET / HTTP/1.1 */
-			bad_request = !parse_http_request(fgets_or_exit(buf, sizeof(buf), client), &request);
-			
-			/* Attente de la ligne vide indiquant que la requête est terminée */
-			skip_headers(client);
-			
-			if (bad_request)
-				send_response(client, 400, "Bad Request", "Bad request\r\n");
-			else if (request.method == HTTP_UNSUPPORTED)
-				send_response(client, 405, "Method Not Allowed", "Method Not Allowed\r\n");
-			else {
-				fd_file = check_and_open(rewrite_url(request.url),document_root);
-				if (fd_file == -1)
-					send_response (client, 404, "Not Found", "Not Found\r\n");
-				else {
-					send_status(client, 200, "OK");
-					send_file(client, fd_file);
-				}
-			}
-			
 			while(1)
 			{
-				fgets_or_exit(buf, sizeof(buf), client);
+				/* Vérification de la ligne GET / HTTP/1.1 */
+				bad_request = !parse_http_request(fgets_or_exit(buf, sizeof(buf), client), &request);
+			
+				/* Attente de la ligne vide indiquant que la requête est terminée */
+				skip_headers(client);
+			
+				if (bad_request)
+					send_response(client, 400, "Bad Request", "Bad request\r\n");
+				else if (request.method == HTTP_UNSUPPORTED)
+					send_response(client, 405, "Method Not Allowed", "Method Not Allowed\r\n");
+				else {
+					url = rewrite_url(request.url);
+				
+					if (url == NULL)
+					{
+						send_response(client, 403, "Forbidden", "Access denied\r\n");
+					}
+					else {
+						fd_file = check_and_open(url,document_root);
+						if (fd_file == -1)
+							send_response (client, 404, "Not Found", "Not Found\r\n");
+						else {
+							send_status(client, 200, "OK");
+							send_content(client, get_mime(get_ext(url)));
+							send_file(client, fd_file);
+						}
+					}
+				}
 			}
 		}
 	}

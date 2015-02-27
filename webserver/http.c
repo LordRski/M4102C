@@ -36,6 +36,7 @@ int parse_http_request(const char * request_line, http_request * request)
 	/* Vérifier que le 3ème mot est de la forme HTTP/M.m (M = 1, m = 0 ou 1) */
 	if (words != NB_WORDS || strcmp("GET", res[0]) != 0 || (strncmp("HTTP/1.0", res[2], 8) != 0 && strncmp("HTTP/1.1", res[2], 8) != 0))
 	{
+		printf("line: %s", request_line);
 		request->method = HTTP_UNSUPPORTED;
 		free(res);
 		return 0;
@@ -77,7 +78,6 @@ void send_status(FILE * client, int code, const char * reason_phrase)
 	if (code != 200) {
 		fprintf(client, "Connection: close\r\n");
 	}
-	fflush(client);
 }
 
 void send_response(FILE * client, int code, const char * reason_phrase, const char * message_body)
@@ -87,9 +87,13 @@ void send_response(FILE * client, int code, const char * reason_phrase, const ch
 	fflush(client);
 }
 
+void send_content(FILE * client, const char * mime)
+{
+	fprintf(client, "Content-Type: %s\r\n", mime);
+}
+
 void send_file(FILE * client, int fd) {
 	fprintf(client, "Content-Length: %d\r\n\r\n", get_file_size(fd));
 	fflush(client);
 	copy(fd, fileno(client));
-	fflush(client);
 }
