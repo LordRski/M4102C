@@ -1,5 +1,7 @@
-http.o: http.c http.h url.h
-main.o: main.c socket.h http.h url.h mime.h
-mime.o: mime.c mime.h
-socket.o: socket.c socket.h
-url.o: url.c url.h
+http.o: http.c headers/http.h headers/url.h
+main.o: main.c headers/socket.h headers/http.h headers/url.h \
+ headers/url.h headers/mime.h headers/stats.h headers/http.h
+mime.o: mime.c headers/mime.h
+socket.o: socket.c headers/socket.h
+stats.o: stats.c headers/stats.h headers/http.h headers/url.h
+url.o: url.c headers/url.h

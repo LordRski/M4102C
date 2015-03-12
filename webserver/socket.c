@@ -1,4 +1,4 @@
-#include "socket.h"
+#include "headers/socket.h"
 
 /* Traitement du signal passé en paramètre */
 void traitement_signal(int sig)

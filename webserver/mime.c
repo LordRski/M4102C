@@ -1,4 +1,4 @@
-#include "mime.h"
+#include "headers/mime.h"
 
 struct ext_to_mime supported_mimes[] = {
 	{ ".jpg", "image/jpeg" },
