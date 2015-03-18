@@ -4,7 +4,7 @@
 #include "headers/mime.h"
 #include "headers/stats.h"
 
-#define UPDATE(a) do { web_stats *stat = get_stats(); stat->(a)++; release_stats(); } while (0)
+#define UPDATE(a) do { web_stats *stats = get_stats(); stats->a++; release_stats(); } while (0)
 
 char * fgets_or_exit(char * buf, int size, FILE * client)
 {
@@ -18,7 +18,6 @@ char * fgets_or_exit(char * buf, int size, FILE * client)
 
 int main(int argc, char **argv)
 {
-	/*const char *motd = "Bienvenue sur le serveur de La 7 Production\r\npar Edouard CATTEZ et Melvin CLAVEL\r\n";*/
 	const char *document_root = "/home/infoetu/catteze/public_html";
 	int port;
 	int socket_serveur;
@@ -63,16 +62,13 @@ int main(int argc, char **argv)
 		
 		if (socket_client != 0 && socket_client != -1)
 		{
-			UPDATE(served_connection);
+			UPDATE(served_connections);
 		
 			client = fdopen(socket_client, "w+");
 			
 			while(1)
 			{
-				stats = get_stats();
-				
-				/* Nouvelle requête ajoutée aux stats */
-				stats->served_requests++;
+				UPDATE(served_requests);
 			
 				/* Vérification de la ligne GET / HTTP/1.1 */
 				bad_request = !parse_http_request(fgets_or_exit(buf, sizeof(buf), client), &request);
@@ -83,8 +79,7 @@ int main(int argc, char **argv)
 				if (bad_request)
 				{
 					send_response(client, 400, "Bad Request", "Bad request\r\n");
-					/* Erreur 404 ajoutée aux stats */
-					stats->ko_404++;
+					UPDATE(ko_404);
 				}
 				else if (request.method == HTTP_UNSUPPORTED)
 				{
@@ -103,10 +98,10 @@ int main(int argc, char **argv)
 						if (url == NULL)
 						{
 							send_response(client, 403, "Forbidden", "Access denied\r\n");
-							/* Erreur 403 ajoutée aux stats */
-							stats->ko_403++;
+							UPDATE(ko_403);
 						}
 						else {
+							/* Ouverture et vérification du fichier à ouvrir au client */
 							fd_file = check_and_open(url,document_root);
 							
 							if (fd_file == -1)
@@ -114,29 +109,23 @@ int main(int argc, char **argv)
 								if (errno == EACCES)
 								{
 									send_response(client, 403, "Forbidden", "Access denied\r\n");
-									/* Erreur 403 ajoutée aux stats */
-									stats->ko_403++;
+									UPDATE(ko_403);
 								}
 								else if (errno == EEXIST)
 								{
 									send_response (client, 404, "Not Found", "Not Found\r\n");
-									/* Erreur 404 ajoutée aux stats */
-									stats->ko_404++;
+									UPDATE(ko_404);
 								}
 							}
 							else {
 								send_status(client, 200, "OK");
 								send_content(client, get_mime(get_ext(url)));
 								send_file(client, fd_file);
-								/* Status 200 ajoutée aux stats */
-								stats->ok_200++;
+								UPDATE(ok_200);
 							}
 						}
 					}
 				}
-				
-				/* Rend la main aux statistiques pour la concurrence des processus */
-				release_stats();
 			}
 		}
 	}
