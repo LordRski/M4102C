@@ -1,6 +1,8 @@
 #ifndef __STATS_H__
 #define __STATS_H__
 
+#include <sys/mman.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include "http.h"
 
@@ -13,6 +15,11 @@ typedef struct
 	int ko_403;
 	int ko_404;
 } web_stats;
+
+typedef struct {
+	sem_t semaphore;
+	web_stats stats;
+} shared_data;
 
 
 /**
@@ -33,5 +40,9 @@ Retourne un pointeur vers la variable globale de stats
 */
 web_stats * get_stats(void);
 
+/**
+Rend la possibilité d'accéder aux stats (concurrence processus)
+*/
+int release_stats(void);
 
 #endif

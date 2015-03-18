@@ -4,6 +4,8 @@
 #include "headers/mime.h"
 #include "headers/stats.h"
 
+#define UPDATE(a) do { web_stats *stat = get_stats(); stat->(a)++; release_stats(); } while (0)
+
 char * fgets_or_exit(char * buf, int size, FILE * client)
 {
 	if (fgets(buf, size, client) == NULL)
@@ -61,15 +63,16 @@ int main(int argc, char **argv)
 		
 		if (socket_client != 0 && socket_client != -1)
 		{
-			/* Nouvelle connexion ajoutée aux stats */
-			get_stats()->served_connections++;
+			UPDATE(served_connection);
 		
 			client = fdopen(socket_client, "w+");
 			
 			while(1)
 			{
+				stats = get_stats();
+				
 				/* Nouvelle requête ajoutée aux stats */
-				get_stats()->served_requests++;
+				stats->served_requests++;
 			
 				/* Vérification de la ligne GET / HTTP/1.1 */
 				bad_request = !parse_http_request(fgets_or_exit(buf, sizeof(buf), client), &request);
@@ -80,9 +83,8 @@ int main(int argc, char **argv)
 				if (bad_request)
 				{
 					send_response(client, 400, "Bad Request", "Bad request\r\n");
-					
 					/* Erreur 404 ajoutée aux stats */
-					get_stats()->ko_404++;
+					stats->ko_404++;
 				}
 				else if (request.method == HTTP_UNSUPPORTED)
 				{
@@ -102,7 +104,7 @@ int main(int argc, char **argv)
 						{
 							send_response(client, 403, "Forbidden", "Access denied\r\n");
 							/* Erreur 403 ajoutée aux stats */
-							get_stats()->ko_403++;
+							stats->ko_403++;
 						}
 						else {
 							fd_file = check_and_open(url,document_root);
@@ -113,26 +115,28 @@ int main(int argc, char **argv)
 								{
 									send_response(client, 403, "Forbidden", "Access denied\r\n");
 									/* Erreur 403 ajoutée aux stats */
-									get_stats()->ko_403++;
+									stats->ko_403++;
 								}
 								else if (errno == EEXIST)
 								{
 									send_response (client, 404, "Not Found", "Not Found\r\n");
 									/* Erreur 404 ajoutée aux stats */
-									get_stats()->ko_404++;
+									stats->ko_404++;
 								}
 							}
 							else {
 								send_status(client, 200, "OK");
 								send_content(client, get_mime(get_ext(url)));
 								send_file(client, fd_file);
-								
 								/* Status 200 ajoutée aux stats */
-								get_stats()->ok_200++;
+								stats->ok_200++;
 							}
 						}
 					}
 				}
+				
+				/* Rend la main aux statistiques pour la concurrence des processus */
+				release_stats();
 			}
 		}
 	}
