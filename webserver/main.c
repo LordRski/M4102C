@@ -43,6 +43,9 @@ int main(int argc, char **argv)
 	/* Initialise les signaux des processus */
 	initialiser_signaux();
 	
+	/* Initialise les statistiques */
+	init_stats();
+	
 	/* Crée un serveur */
 	socket_serveur = creer_serveur(port);
 	
@@ -98,18 +101,26 @@ int main(int argc, char **argv)
 						if (url == NULL)
 						{
 							send_response(client, 403, "Forbidden", "Access denied\r\n");
-							
 							/* Erreur 403 ajoutée aux stats */
 							get_stats()->ko_403++;
 						}
 						else {
 							fd_file = check_and_open(url,document_root);
+							
 							if (fd_file == -1)
 							{
-								send_response (client, 404, "Not Found", "Not Found\r\n");
-								
-								/* Erreur 404 ajoutée aux stats */
-								get_stats()->ko_404++;
+								if (errno == EACCES)
+								{
+									send_response(client, 403, "Forbidden", "Access denied\r\n");
+									/* Erreur 403 ajoutée aux stats */
+									get_stats()->ko_403++;
+								}
+								else if (errno == EEXIST)
+								{
+									send_response (client, 404, "Not Found", "Not Found\r\n");
+									/* Erreur 404 ajoutée aux stats */
+									get_stats()->ko_404++;
+								}
 							}
 							else {
 								send_status(client, 200, "OK");

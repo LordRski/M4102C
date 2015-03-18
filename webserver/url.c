@@ -38,11 +38,24 @@ int check_and_open(const char * url, const char * document_root)
 {
 	int fd;
 	char *path;
+	struct stat s;
+	int status;
 	
 	path = (char*)malloc(strlen(url)+strlen(document_root)+1);
 	
 	strcpy(path, document_root);
 	strcat(path, url);
+	
+	status = stat(path, &s);
+	
+	if (status == -1)
+		return -1;
+	
+	if (!S_ISREG(s.st_mode)) {
+		errno = EACCES;
+		return -1;
+	}
+	
 	fd = open(path, O_RDONLY);
 	
 	if (fd < 0)
