@@ -4,7 +4,7 @@
 #include "headers/mime.h"
 #include "headers/stats.h"
 
-#define UPDATE(a) do { web_stats *stats = get_stats(); stats->a++; release_stats(); } while (0)
+#define UPDATE(a) do { web_stats *stats = get_stats(); stats->(a++); release_stats(); } while (0)
 
 char * fgets_or_exit(char * buf, int size, FILE * client)
 {
